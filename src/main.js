@@ -5,13 +5,13 @@ const form = document.querySelector('.search-form');
 const input = document.querySelector('input[name="searchQuery"]');
 const loader = document.querySelector('.loader');
 const loadMoreBtn = document.createElement('button');
-
 loadMoreBtn.textContent = 'Load more';
 loadMoreBtn.classList.add('load-more');
-document.body.append(loadMoreBtn);
+document.body.appendChild(loadMoreBtn);
 
 let currentPage = 1;
 let currentQuery = '';
+const IMAGES_PER_PAGE = 15;
 let totalHits = 0;
 
 function showLoader() {
@@ -22,13 +22,15 @@ function hideLoader() {
   loader.classList.remove('visible');
 }
 
-function showLoadMoreButton() {
-  loadMoreBtn.classList.add('visible');
+function hideLoadMoreBtn() {
+  loadMoreBtn.style.display = 'none';
 }
 
-function hideLoadMoreButton() {
-  loadMoreBtn.classList.remove('visible');
+function showLoadMoreBtn() {
+  loadMoreBtn.style.display = 'block';
 }
+
+hideLoadMoreBtn();
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -41,14 +43,14 @@ form.addEventListener('submit', async (event) => {
 
   currentQuery = query;
   currentPage = 1;
-  
   clearGallery();
-  hideLoadMoreButton();
+  hideLoadMoreBtn();
   showLoader();
 
   try {
-    const images = await fetchImages(currentQuery, currentPage);
-    totalHits = images.totalHits;
+    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
+    const images = response.hits;
+    totalHits = response.totalHits;
 
     hideLoader();
 
@@ -58,7 +60,36 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderImages(images);
-    showLoadMoreButton();
+
+    if (images.length === IMAGES_PER_PAGE) {
+      showLoadMoreBtn();
+    } else {
+      hideLoadMoreBtn();
+    }
+
+  } catch (error) {
+    hideLoader();
+    showNotification('Something went wrong. Please try again later.');
+  }
+});
+
+loadMoreBtn.addEventListener('click', async () => {
+  currentPage += 1;
+  showLoader();
+
+  try {
+    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
+    const images = response.hits;
+
+    hideLoader();
+
+    renderImages(images);
+
+    if (images.length < IMAGES_PER_PAGE || currentPage * IMAGES_PER_PAGE >= totalHits) {
+      hideLoadMoreBtn();
+      showNotification("We're sorry, but you've reached the end of search results.");
+    }
+
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
@@ -74,23 +105,6 @@ function scrollPage() {
 }
 
 loadMoreBtn.addEventListener('click', async () => {
-  currentPage += 1;
-  showLoader();
-
-  try {
-    const images = await fetchImages(currentQuery, currentPage);
-    hideLoader();
-
-    if (images.length === 0) {
-      showNotification("We're sorry, but you've reached the end of search results.");
-      hideLoadMoreButton();
-      return;
-    }
-
-    renderImages(images);
-    scrollPage();
-  } catch (error) {
-    hideLoader();
-    showNotification('Something went wrong. Please try again later.');
-  }
+  await fetchImages(currentQuery, currentPage);
+  scrollPage();
 });
