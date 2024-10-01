@@ -5,15 +5,14 @@ const form = document.querySelector('.search-form');
 const input = document.querySelector('input[name="searchQuery"]');
 const loader = document.querySelector('.loader');
 const loadMoreBtn = document.createElement('button');
+
 loadMoreBtn.textContent = 'Load more';
 loadMoreBtn.classList.add('load-more');
-document.body.appendChild(loadMoreBtn);
+document.body.append(loadMoreBtn);
 
 let currentPage = 1;
 let currentQuery = '';
-const IMAGES_PER_PAGE = 15;
 let totalHits = 0;
-let loadedImages = 0;
 
 function showLoader() {
   loader.classList.add('visible');
@@ -23,15 +22,13 @@ function hideLoader() {
   loader.classList.remove('visible');
 }
 
-function hideLoadMoreBtn() {
-  loadMoreBtn.style.display = 'none';
+function showLoadMoreButton() {
+  loadMoreBtn.classList.add('visible');
 }
 
-function showLoadMoreBtn() {
-  loadMoreBtn.style.display = 'block';
+function hideLoadMoreButton() {
+  loadMoreBtn.classList.remove('visible');
 }
-
-hideLoadMoreBtn();
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -44,16 +41,15 @@ form.addEventListener('submit', async (event) => {
 
   currentQuery = query;
   currentPage = 1;
-  loadedImages = 0;
+  
   clearGallery();
-  hideLoadMoreBtn();
+  hideLoadMoreButton();
   showLoader();
 
   try {
-    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
-    const images = response.hits;
-    totalHits = response.totalHits;
-    
+    const images = await fetchImages(currentQuery, currentPage);
+    totalHits = images.totalHits;
+
     hideLoader();
 
     if (images.length === 0) {
@@ -62,46 +58,10 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderImages(images);
-    loadedImages += images.length;
-
-    if (totalHits <= IMAGES_PER_PAGE || loadedImages >= totalHits) {
-      hideLoadMoreBtn();
-      if (loadedImages >= totalHits) {
-        showNotification("We're sorry, but you've reached the end of search results.");
-      }
-    } else {
-      showLoadMoreBtn();
-    }
-
+    showLoadMoreButton();
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
-    console.error('Error fetching images:', error);
-  }
-});
-
-loadMoreBtn.addEventListener('click', async () => {
-  currentPage += 1;
-  showLoader();
-
-  try {
-    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
-    const images = response.hits;
-    
-    hideLoader();
-
-    renderImages(images);
-    loadedImages += images.length;
-
-    if (loadedImages >= totalHits) {
-      hideLoadMoreBtn();
-      showNotification("We're sorry, but you've reached the end of search results.");
-    }
-
-  } catch (error) {
-    hideLoader();
-    showNotification('Something went wrong. Please try again later.');
-    console.error('Error loading more images:', error);
   }
 });
 
@@ -114,6 +74,23 @@ function scrollPage() {
 }
 
 loadMoreBtn.addEventListener('click', async () => {
-  await fetchImages(currentQuery, currentPage);
-  scrollPage();
+  currentPage += 1;
+  showLoader();
+
+  try {
+    const images = await fetchImages(currentQuery, currentPage);
+    hideLoader();
+
+    if (images.length === 0) {
+      showNotification("We're sorry, but you've reached the end of search results.");
+      hideLoadMoreButton();
+      return;
+    }
+
+    renderImages(images);
+    scrollPage();
+  } catch (error) {
+    hideLoader();
+    showNotification('Something went wrong. Please try again later.');
+  }
 });
