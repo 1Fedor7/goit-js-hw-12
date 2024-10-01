@@ -13,6 +13,7 @@ let currentPage = 1;
 let currentQuery = '';
 const IMAGES_PER_PAGE = 15;
 let totalHits = 0;
+let loadedImages = 0;
 
 function showLoader() {
   loader.classList.add('visible');
@@ -43,6 +44,7 @@ form.addEventListener('submit', async (event) => {
 
   currentQuery = query;
   currentPage = 1;
+  loadedImages = 0;
   clearGallery();
   hideLoadMoreBtn();
   showLoader();
@@ -51,6 +53,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
     const images = response.hits;
     totalHits = response.totalHits;
+    loadedImages += images.length;
 
     hideLoader();
 
@@ -61,10 +64,11 @@ form.addEventListener('submit', async (event) => {
 
     renderImages(images);
 
-    if (images.length === IMAGES_PER_PAGE) {
+    if (loadedImages < totalHits) {
       showLoadMoreBtn();
     } else {
       hideLoadMoreBtn();
+      showNotification("We're sorry, but you've reached the end of search results.");
     }
 
   } catch (error) {
@@ -80,12 +84,13 @@ loadMoreBtn.addEventListener('click', async () => {
   try {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
     const images = response.hits;
+    loadedImages += images.length;
 
     hideLoader();
 
     renderImages(images);
 
-    if (images.length < IMAGES_PER_PAGE || currentPage * IMAGES_PER_PAGE >= totalHits) {
+    if (loadedImages >= totalHits) {
       hideLoadMoreBtn();
       showNotification("We're sorry, but you've reached the end of search results.");
     }
