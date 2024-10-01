@@ -53,8 +53,7 @@ form.addEventListener('submit', async (event) => {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
     const images = response.hits;
     totalHits = response.totalHits;
-    loadedImages += images.length;
-
+    
     hideLoader();
 
     if (images.length === 0) {
@@ -63,17 +62,21 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderImages(images);
+    loadedImages += images.length;
 
-    if (loadedImages < totalHits) {
-      showLoadMoreBtn();
-    } else {
+    if (totalHits <= IMAGES_PER_PAGE || loadedImages >= totalHits) {
       hideLoadMoreBtn();
-      showNotification("We're sorry, but you've reached the end of search results.");
+      if (loadedImages >= totalHits) {
+        showNotification("We're sorry, but you've reached the end of search results.");
+      }
+    } else {
+      showLoadMoreBtn();
     }
 
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
+    console.error('Error fetching images:', error);
   }
 });
 
@@ -84,11 +87,11 @@ loadMoreBtn.addEventListener('click', async () => {
   try {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
     const images = response.hits;
-    loadedImages += images.length;
-
+    
     hideLoader();
 
     renderImages(images);
+    loadedImages += images.length;
 
     if (loadedImages >= totalHits) {
       hideLoadMoreBtn();
@@ -98,6 +101,7 @@ loadMoreBtn.addEventListener('click', async () => {
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
+    console.error('Error loading more images:', error);
   }
 });
 
