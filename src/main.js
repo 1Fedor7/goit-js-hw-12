@@ -49,6 +49,11 @@ form.addEventListener('submit', async (event) => {
 
   try {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
+    
+    if (!response || !response.hits) {
+      throw new Error('Invalid response format');
+    }
+
     const images = response.hits;
     totalHits = response.totalHits;
 
@@ -69,6 +74,7 @@ form.addEventListener('submit', async (event) => {
 
   } catch (error) {
     hideLoader();
+    console.error('Error fetching images:', error);
     showNotification('Something went wrong. Please try again later.');
   }
 });
@@ -79,6 +85,11 @@ loadMoreBtn.addEventListener('click', async () => {
 
   try {
     const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
+    
+    if (!response || !response.hits) {
+      throw new Error('Invalid response format');
+    }
+
     const images = response.hits;
 
     hideLoader();
@@ -92,6 +103,7 @@ loadMoreBtn.addEventListener('click', async () => {
 
   } catch (error) {
     hideLoader();
+    console.error('Error fetching images:', error);
     showNotification('Something went wrong. Please try again later.');
   }
 });
