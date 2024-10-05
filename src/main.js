@@ -9,6 +9,7 @@ const loadMoreBtn = document.querySelector('.load-more');
 let currentPage = 1;
 let currentQuery = '';
 let totalHits = 0;
+let loadedImages = 0;
 
 function showLoader() {
   loader.classList.add('visible');
@@ -26,20 +27,9 @@ function hideLoadMoreBtn() {
   loadMoreBtn.hidden = true;
 }
 
-function scrollPage() {
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * 2,
-    behavior: 'smooth',
-  });
-}
-
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  
+
   const query = input.value.trim();
   if (!query) {
     showNotification('Please enter a search term.');
@@ -48,16 +38,19 @@ form.addEventListener('submit', async (event) => {
 
   currentQuery = query;
   currentPage = 1;
+  loadedImages = 0;
 
   clearGallery();
   hideLoadMoreBtn();
   showLoader();
 
   try {
-    const images = await fetchImages(currentQuery, currentPage);
-    totalHits = images.length;
-
+    const response = await fetchImages(currentQuery, currentPage);
     hideLoader();
+
+    const images = response.hits;
+    totalHits = response.totalHits;
+    loadedImages += images.length;
 
     if (images.length === 0) {
       showNotification('Sorry, there are no images matching your search query. Please try again!');
@@ -65,7 +58,13 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderImages(images);
-    showLoadMoreBtn();
+
+    if (loadedImages >= totalHits || images.length < 15) {
+      hideLoadMoreBtn();
+      showNotification("We're sorry, but you've reached the end of search results.");
+    } else {
+      showLoadMoreBtn();
+    }
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
@@ -77,9 +76,12 @@ loadMoreBtn.addEventListener('click', async () => {
   showLoader();
 
   try {
-    const images = await fetchImages(currentQuery, currentPage);
-
+    const response = await fetchImages(currentQuery, currentPage);
     hideLoader();
+
+    const images = response.hits;
+    loadedImages += images.length;
+
     if (images.length === 0) {
       showNotification("We're sorry, but you've reached the end of search results.");
       hideLoadMoreBtn();
@@ -87,8 +89,11 @@ loadMoreBtn.addEventListener('click', async () => {
     }
 
     renderImages(images);
-    scrollPage();
-    showLoadMoreBtn();
+
+    if (loadedImages >= totalHits) {
+      hideLoadMoreBtn();
+      showNotification("We're sorry, but you've reached the end of search results.");
+    }
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
