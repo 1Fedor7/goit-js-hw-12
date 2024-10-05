@@ -27,6 +27,8 @@ function hideLoadMoreBtn() {
   loadMoreBtn.hidden = true;
 }
 
+hideLoadMoreBtn();
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -59,11 +61,10 @@ form.addEventListener('submit', async (event) => {
 
     renderImages(images);
 
-    if (loadedImages >= totalHits || images.length < 15) {
-      hideLoadMoreBtn();
-      showNotification("We're sorry, but you've reached the end of search results.");
-    } else {
+    if (images.length === 15 && loadedImages < totalHits) {
       showLoadMoreBtn();
+    } else {
+      hideLoadMoreBtn();
     }
   } catch (error) {
     hideLoader();
@@ -90,7 +91,7 @@ loadMoreBtn.addEventListener('click', async () => {
 
     renderImages(images);
 
-    if (loadedImages >= totalHits) {
+    if (loadedImages >= totalHits || images.length < 15) {
       hideLoadMoreBtn();
       showNotification("We're sorry, but you've reached the end of search results.");
     }
