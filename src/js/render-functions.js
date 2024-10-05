@@ -26,7 +26,6 @@ export function renderImages(images) {
 
   gallery.insertAdjacentHTML('beforeend', markup);
 
-  // Ініціалізація або оновлення SimpleLightbox після відображення нових зображень
   if (!lightbox) {
     lightbox = new SimpleLightbox('.gallery a');
   } else {
