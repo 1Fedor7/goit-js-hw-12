@@ -11,6 +11,16 @@ let currentQuery = '';
 let totalHits = 0;
 let loadedImages = 0;
 
+function showLoadMoreBtn() {
+  loadMoreBtn.style.display = 'block';
+}
+
+function hideLoadMoreBtn() {
+  loadMoreBtn.style.display = 'none';
+}
+
+hideLoadMoreBtn();
+
 function showLoader() {
   loader.classList.add('visible');
 }
@@ -18,16 +28,6 @@ function showLoader() {
 function hideLoader() {
   loader.classList.remove('visible');
 }
-
-function showLoadMoreBtn() {
-  loadMoreBtn.hidden = false;
-}
-
-function hideLoadMoreBtn() {
-  loadMoreBtn.hidden = true;
-}
-
-hideLoadMoreBtn();
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -94,6 +94,8 @@ loadMoreBtn.addEventListener('click', async () => {
     if (loadedImages >= totalHits || images.length < 15) {
       hideLoadMoreBtn();
       showNotification("We're sorry, but you've reached the end of search results.");
+    } else {
+      showLoadMoreBtn();
     }
   } catch (error) {
     hideLoader();
