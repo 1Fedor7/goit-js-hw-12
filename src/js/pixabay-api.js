@@ -8,9 +8,9 @@ export async function fetchImages(query, page = 1, perPage = 15) {
   
   try {
     const response = await axios.get(url);
-    return response.data.hits;
+    return response.data;
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching data from API:', error);
     throw error;
   }
 }
