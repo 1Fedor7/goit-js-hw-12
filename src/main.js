@@ -1,5 +1,5 @@
-import { fetchImages } from './pixabay-api';
-import { renderImages, clearGallery, showNotification } from './render-functions';
+import { fetchImages } from './js/pixabay-api';
+import { renderImages, clearGallery, showNotification } from './js/render-functions';
 
 const form = document.querySelector('.search-form');
 const input = document.querySelector('input[name="searchQuery"]');
