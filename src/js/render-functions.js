@@ -12,7 +12,7 @@ export function clearGallery() {
 
 export function renderImages(images) {
   const gallery = document.querySelector('.gallery');
-  
+
   const markup = images.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => `
     <a class="gallery__item" href="${largeImageURL}">
       <img class="gallery__image" src="${webformatURL}" alt="${tags}" loading="lazy" />
@@ -26,6 +26,7 @@ export function renderImages(images) {
 
   gallery.insertAdjacentHTML('beforeend', markup);
 
+  // Ініціалізація або оновлення SimpleLightbox після відображення нових зображень
   if (!lightbox) {
     lightbox = new SimpleLightbox('.gallery a');
   } else {
@@ -37,5 +38,7 @@ export function showNotification(message) {
   iziToast.error({
     title: 'Error',
     message: message,
+    position: 'topRight',
+    timeout: 3000,
   });
 }
