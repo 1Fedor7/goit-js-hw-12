@@ -1,17 +1,13 @@
-import { fetchImages } from './js/pixabay-api';
-import { renderImages, clearGallery, showNotification } from './js/render-functions';
+import { fetchImages } from './pixabay-api';
+import { renderImages, clearGallery, showNotification } from './render-functions';
 
 const form = document.querySelector('.search-form');
 const input = document.querySelector('input[name="searchQuery"]');
 const loader = document.querySelector('.loader');
-const loadMoreBtn = document.createElement('button');
-loadMoreBtn.textContent = 'Load more';
-loadMoreBtn.classList.add('load-more');
-document.body.appendChild(loadMoreBtn);
+const loadMoreBtn = document.querySelector('.load-more');
 
 let currentPage = 1;
 let currentQuery = '';
-const IMAGES_PER_PAGE = 15;
 let totalHits = 0;
 
 function showLoader() {
@@ -22,19 +18,28 @@ function hideLoader() {
   loader.classList.remove('visible');
 }
 
-function hideLoadMoreBtn() {
-  loadMoreBtn.style.display = 'none';
-}
-
 function showLoadMoreBtn() {
-  loadMoreBtn.style.display = 'block';
+  loadMoreBtn.hidden = false;
 }
 
-hideLoadMoreBtn();
+function hideLoadMoreBtn() {
+  loadMoreBtn.hidden = true;
+}
+
+function scrollPage() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-
+  
   const query = input.value.trim();
   if (!query) {
     showNotification('Please enter a search term.');
@@ -43,14 +48,14 @@ form.addEventListener('submit', async (event) => {
 
   currentQuery = query;
   currentPage = 1;
+
   clearGallery();
   hideLoadMoreBtn();
   showLoader();
 
   try {
-    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
-    const images = response.hits;
-    totalHits = response.totalHits;
+    const images = await fetchImages(currentQuery, currentPage);
+    totalHits = images.length;
 
     hideLoader();
 
@@ -60,13 +65,7 @@ form.addEventListener('submit', async (event) => {
     }
 
     renderImages(images);
-
-    if (images.length === IMAGES_PER_PAGE) {
-      showLoadMoreBtn();
-    } else {
-      hideLoadMoreBtn();
-    }
-
+    showLoadMoreBtn();
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
@@ -78,33 +77,20 @@ loadMoreBtn.addEventListener('click', async () => {
   showLoader();
 
   try {
-    const response = await fetchImages(currentQuery, currentPage, IMAGES_PER_PAGE);
-    const images = response.hits;
+    const images = await fetchImages(currentQuery, currentPage);
 
     hideLoader();
-
-    renderImages(images);
-
-    if (images.length < IMAGES_PER_PAGE || currentPage * IMAGES_PER_PAGE >= totalHits) {
-      hideLoadMoreBtn();
+    if (images.length === 0) {
       showNotification("We're sorry, but you've reached the end of search results.");
+      hideLoadMoreBtn();
+      return;
     }
 
+    renderImages(images);
+    scrollPage();
+    showLoadMoreBtn();
   } catch (error) {
     hideLoader();
     showNotification('Something went wrong. Please try again later.');
   }
-});
-
-function scrollPage() {
-  const { height: cardHeight } = document.querySelector('.gallery').firstElementChild.getBoundingClientRect();
-  window.scrollBy({
-    top: cardHeight * 2,
-    behavior: 'smooth',
-  });
-}
-
-loadMoreBtn.addEventListener('click', async () => {
-  await fetchImages(currentQuery, currentPage);
-  scrollPage();
 });
